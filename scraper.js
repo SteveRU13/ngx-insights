@@ -24,7 +24,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = 4000;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'REMOVED';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const NGX_URL = 'https://ngxgroup.com/exchange/data/equities-price-list/';
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
