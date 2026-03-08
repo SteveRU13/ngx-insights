@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NGX Insights — Nigerian Stock Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0d;
+    --bg-2: #0f1612;
+    --bg-3: #141e18;
+    --surface: #1a2420;
+    --surface-2: #1f2d28;
+    --border: #2a3d34;
+    --border-2: #344d42;
+    --text: #e8f0ec;
+    --text-2: #9ab5a6;
+    --text-3: #5a7a6a;
+    --green: #00e87a;
+    --green-dim: #00a855;
+    --green-glow: rgba(0, 232, 122, 0.15);
+    --red: #ff4757;
+    --red-dim: #c0392b;
+    --red-glow: rgba(255, 71, 87, 0.15);
+    --gold: #f0c040;
+    --gold-dim: #b8900c;
+    --accent: #00e87a;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-serif: 'Instrument Serif', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+  /* ===== NAVIGATION ===== */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 60px;
+    background: rgba(10, 15, 13, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 0;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-right: 40px;
+  }
+
+  .nav-logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--bg);
+  }
+
+  .nav-logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .nav-logo-text span {
+    color: var(--green);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: var(--font-display);
+    letter-spacing: 0.2px;
+  }
+
+  .nav-tab:hover { color: var(--text-2); background: var(--surface); }
+  .nav-tab.active { color: var(--text); background: var(--surface); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+  }
+
+  .market-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .btn-upgrade {
+    padding: 7px 16px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+
+  .btn-upgrade:hover { background: #00ff88; transform: translateY(-1px); }
+
+  /* ===== MAIN LAYOUT ===== */
+  .app {
+    display: none;
+    padding-top: 60px;
+    min-height: 100vh;
+  }
+
+  .app.active { display: flex; }
+
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg-2);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    height: calc(100vh - 60px);
+    position: sticky;
+    top: 60px;
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    margin-bottom: 24px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1.5px;
+    color: var(--text-3);
+    padding: 0 8px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .sidebar-item:hover { color: var(--text); background: var(--surface); }
+  .sidebar-item.active { color: var(--green); background: var(--green-glow); }
+
+  .sidebar-item .icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    height: calc(100vh - 60px);
+  }
+
+  /* ===== PAGES ===== */
+  .page { display: none; padding: 24px; }
+  .page.active { display: block; }
+
+  /* ===== MARKET OVERVIEW ===== */
+  .market-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .market-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 1.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .market-index {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .market-change {
+    font-size: 14px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    margin-top: 4px;
+  }
+
+  .market-change.negative { color: var(--red); }
+
+  .market-meta {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    text-align: right;
+  }
+
+  /* INDEX CHART */
+  .index-chart {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  .chart-timeframes {
+    display: flex;
+    gap: 2px;
+  }
+
+  .tf-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: all 0.15s;
+  }
+
+  .tf-btn:hover { color: var(--text-2); background: var(--surface); }
+  .tf-btn.active { color: var(--green); background: var(--green-glow); }
+
+  .mini-chart {
+    width: 100%;
+    height: 160px;
+  }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border-2); }
+
+  .stat-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+  }
+
+  .positive { color: var(--green); }
+  .negative { color: var(--red); }
+  .neutral { color: var(--gold); }
+
+  /* STOCKS TABLE */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-action {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    cursor: pointer;
+  }
+
+  .stocks-table {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 80px;
+    padding: 10px 16px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-3);
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 80px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    align-items: center;
+  }
+
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--surface); }
+
+  .stock-name-col { }
+
+  .stock-ticker {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .stock-fullname {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stock-sector-badge {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--text-3);
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+
+  .price-col {
+    font-size: 14px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .change-col {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  .sparkline-col { display: flex; align-items: center; }
+
+  .ai-signal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .signal-buy { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,232,122,0.3); }
+  .signal-hold { background: rgba(240,192,64,0.1); color: var(--gold); border: 1px solid rgba(240,192,64,0.3); }
+  .signal-sell { background: var(--red-glow); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+  .signal-strong-buy { background: var(--green-glow); color: #00ff88; border: 1px solid rgba(0,255,136,0.4); }
+
+  /* TWO COLUMN LAYOUT */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  /* NEWS FEED */
+  .news-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .news-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+  .news-item:hover { background: var(--surface); }
+
+  .news-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .news-source {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    letter-spacing: 0.5px;
+  }
+
+  .news-time {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+  }
+
+  .news-ticker-tag {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+
+  .news-headline {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .news-sentiment {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+
+  /* SECTOR HEATMAP */
+  .heatmap-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .heatmap-cell {
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .heatmap-cell:hover { transform: scale(1.02); }
+
+  .heatmap-sector {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.8;
+  }
+
+  .heatmap-change {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  /* ===== AI ADVISOR PAGE ===== */
+  .ai-page {
+    max-width: 900px;
+  }
+
+  .ai-hero {
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ai-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--green-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-glow);
+    border: 1px solid rgba(0,232,122,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .ai-hero-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .ai-hero-title em {
+    font-style: italic;
+    font-family: var(--font-serif);
+    color: var(--green);
+  }
+
+  .ai-hero-sub {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+    max-width: 500px;
+    margin-bottom: 20px;
+  }
+
+  .ai-input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .ai-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: var(--font-display);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .ai-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-glow); }
+  .ai-input::placeholder { color: var(--text-3); }
+
+  .btn-analyze {
+    padding: 12px 24px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-analyze:hover { background: #00ff88; transform: translateY(-1px); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* AI RESULT */
+  .ai-result {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ai-result-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-3);
+  }
+
+  .ai-result-ticker {
+    font-size: 20px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+  }
+
+  .ai-signal-large {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+  }
+
+  .confidence-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .confidence-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+  }
+
+  .confidence-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .ai-result-body {
+    padding: 20px;
+  }
+
+  .ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .ai-section {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .ai-section-title {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+  }
+
+  .ai-point {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .ai-point::before {
+    content: '→';
+    color: var(--green);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .ai-point.bear::before { content: '→'; color: var(--red); }
+
+  .ai-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .ai-metric {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .ai-metric-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .ai-metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  .ai-disclaimer {
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.5;
+    padding: 12px;
+    background: var(--bg-3);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    font-family: var(--font-mono);
+  }
+
+  .ai-streaming-text {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.7;
+    padding: 20px;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--green);
+    margin-left: 2px;
+    animation: blink 1s infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* QUICK PICKS */
+  .quick-picks {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .quick-pick {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .quick-pick:hover { border-color: var(--green); background: var(--green-glow); }
+
+  .qp-ticker {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    margin-bottom: 2px;
+  }
+
+  .qp-name {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+  }
+
+  .qp-signal {
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+
+  /* ===== SCREENER PAGE ===== */
+  .screener-filters {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .filter-group label {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.8px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .filter-select, .filter-input {
+    width: 100%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus, .filter-input:focus { border-color: var(--green); }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn-screen {
+    padding: 8px 20px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-screen:hover { background: #00ff88; }
+
+  .btn-reset {
+    padding: 8px 16px;
+    background: var(--surface);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 12px;
+    font-family: var(--font-display);
+    cursor: pointer;
+  }
+
+  .results-count {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    margin-left: auto;
+  }
+
+  /* ===== PORTFOLIO PAGE ===== */
+  .portfolio-summary {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .portfolio-hero {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .portfolio-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .portfolio-value {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 4px;
+  }
+
+  .holdings-list {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .holding-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .holding-row:hover { background: var(--surface); }
+  .holding-row:last-child { border-bottom: none; }
+
+  /* ===== LOADING STATE ===== */
+  .loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-2);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 16px;
+    width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg-2);
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: none;
+    color: var(--text-2);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { background: var(--border); color: var(--text); }
+
+  .modal-body { padding: 24px; }
+
+  .stock-detail-price {
+    font-size: 36px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .fundamentals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .fund-metric {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .fund-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  .fund-value {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 300;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(0,232,122,0.4); }
+  .toast.error { border-color: rgba(255,71,87,0.4); }
+
+  /* UPGRADE MODAL */
+  .upgrade-modal-body { padding: 28px; text-align: center; }
+
+  .upgrade-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .upgrade-title {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .upgrade-sub {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .pricing-card {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: left;
+  }
+
+  .pricing-card.featured {
+    border-color: var(--green);
+    background: var(--green-glow);
+  }
+
+  .pricing-plan {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .pricing-card.featured .pricing-plan { color: var(--green); }
+
+  .pricing-price {
+    font-size: 28px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -1px;
+    margin-bottom: 2px;
+  }
+
+  .pricing-period {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    margin-bottom: 14px;
+  }
+
+  .pricing-feature {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 5px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .pricing-feature::before { content: '✓'; color: var(--green); }
+
+  .btn-subscribe {
+    width: 100%;
+    padding: 12px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-subscribe:hover { background: #00ff88; }
+
+  /* SEARCH BAR */
+  .search-bar {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px 12px 44px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: var(--font-display);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--green); }
+  .search-input::placeholder { color: var(--text-3); }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: 18px;
+  }
+
+  /* CHART SVG */
+  .sparkline { overflow: visible; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .filter-grid { grid-template-columns: repeat(3, 1fr); }
+    .quick-picks { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .portfolio-summary { grid-template-columns: 1fr; }
+    nav { padding: 0 16px; }
+    .page { padding: 16px; }
+  }
+
+  /* LANDING PAGE (shown before app) */
+  .landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    position: relative;
+  }
+
+  .landing-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 800px 600px at 50% 30%, rgba(0,232,122,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .landing-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-glow);
+    border: 1px solid rgba(0,232,122,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    letter-spacing: 0.8px;
+    margin-bottom: 28px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .landing-title {
+    font-size: clamp(40px, 7vw, 80px);
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 0.95;
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease 0.1s both;
+  }
+
+  .landing-title em {
+    font-style: italic;
+    font-family: var(--font-serif);
+    color: var(--green);
+  }
+
+  .landing-sub {
+    font-size: 18px;
+    color: var(--text-2);
+    max-width: 540px;
+    line-height: 1.6;
+    margin-bottom: 36px;
+    animation: fadeIn 0.5s ease 0.2s both;
+  }
+
+  .landing-cta {
+    display: flex;
+    gap: 12px;
+    animation: fadeIn 0.5s ease 0.3s both;
+  }
+
+  .btn-cta-primary {
+    padding: 14px 32px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cta-primary:hover { background: #00ff88; transform: translateY(-2px); box-shadow: 0 8px 24px var(--green-glow); }
+
+  .btn-cta-secondary {
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--text-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cta-secondary:hover { background: var(--surface); color: var(--text); }
+
+  .landing-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 56px;
+    animation: fadeIn 0.5s ease 0.4s both;
+  }
+
+  .landing-stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .landing-stat-label {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-3);
+    letter-spacing: 0.5px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* TICKER TAPE */
+  .ticker-tape {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: var(--bg-3);
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 40px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  .ticker-name { color: var(--text-2); font-weight: 600; }
+  .ticker-price { color: var(--text-3); }
+
+  /* ADD HOLDING FORM */
+  .add-holding-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.8px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--green); }
+
+  .btn-add {
+    align-self: flex-end;
+    padding: 9px 20px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.15s;
+    grid-column: span 3;
+    width: fit-content;
+  }
+
+  .btn-add:hover { background: #00ff88; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-3);
+    font-size: 13px;
+    font-family: var(--font-mono);
+  }
+
+  .empty-state .emoji { font-size: 36px; display: block; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landing" class="landing">
+  <div class="landing-bg"></div>
+  <div class="landing-eyebrow">
+    <span class="status-dot"></span>
+    NGX Live · 163 Listed Securities
+  </div>
+  <h1 class="landing-title">
+    Nigerian Stock<br>
+    <em>Intelligence</em><br>
+    Platform
+  </h1>
+  <p class="landing-sub">
+    AI-powered analytics, real-time NGX data, and personalized investment insights — built for every Nigerian investor.
+  </p>
+  <div class="landing-cta">
+    <button class="btn-cta-primary" onclick="enterApp()">Launch Platform →</button>
+    <button class="btn-cta-secondary" onclick="showUpgradeModal()">View Pricing</button>
+  </div>
+  <div class="landing-stats">
+    <div>
+      <div class="landing-stat-value">163</div>
+      <div class="landing-stat-label">Listed companies</div>
+    </div>
+    <div>
+      <div class="landing-stat-value">₦58T</div>
+      <div class="landing-stat-label">Market cap</div>
+    </div>
+    <div>
+      <div class="landing-stat-value">AI</div>
+      <div class="landing-stat-label">Powered advice</div>
+    </div>
+    <div>
+      <div class="landing-stat-value">RT</div>
+      <div class="landing-stat-label">Live prices</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<nav id="main-nav" style="display:none">
+  <a class="nav-logo" href="#" onclick="showPage('dashboard')">
+    <div class="nav-logo-mark">N</div>
+    <span class="nav-logo-text">NGX<span>Insights</span></span>
+  </a>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard', this)">Market</button>
+    <button class="nav-tab" onclick="showPage('screener', this)">Screener</button>
+    <button class="nav-tab" onclick="showPage('ai-advisor', this)">AI Advisor</button>
+    <button class="nav-tab" onclick="showPage('portfolio', this)">Portfolio</button>
+    <button class="nav-tab" onclick="showPage('news', this)">News</button>
+  </div>
+  <div class="nav-right">
+    <div class="market-status" id="data-source-badge" title="Start scraper.js for live NGX prices" style="cursor:default;margin-right:4px">
+      <span class="status-dot" style="background:var(--gold)"></span>
+      <span>DEMO DATA</span>
+    </div>
+    <div class="market-status">
+      <div class="status-dot"></div>
+      <span id="market-time">MARKET OPEN · 13:24 WAT</span>
+    </div>
+    <button class="btn-upgrade" onclick="showUpgradeModal()">Upgrade Pro</button>
+  </div>
+</nav>
+
+<div class="app" id="main-app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Watchlist</div>
+      <div class="sidebar-item active" onclick="openStockModal('DANGCEM')">
+        <span class="icon">⭐</span> DANGCEM
+      </div>
+      <div class="sidebar-item" onclick="openStockModal('GTCO')">
+        <span class="icon">⭐</span> GTCO
+      </div>
+      <div class="sidebar-item" onclick="openStockModal('ZENITHBANK')">
+        <span class="icon">⭐</span> ZENITHBANK
+      </div>
+      <div class="sidebar-item" onclick="openStockModal('MTNN')">
+        <span class="icon">⭐</span> MTNN
+      </div>
+      <div class="sidebar-item" onclick="openStockModal('AIRTELAFRI')">
+        <span class="icon">⭐</span> AIRTELAFRI
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sectors</div>
+      <div class="sidebar-item" onclick="filterSector('Banking')">
+        <span class="icon">🏦</span> Banking
+      </div>
+      <div class="sidebar-item" onclick="filterSector('Consumer Goods')">
+        <span class="icon">🛒</span> Consumer Goods
+      </div>
+      <div class="sidebar-item" onclick="filterSector('Telecoms')">
+        <span class="icon">📡</span> Telecoms
+      </div>
+      <div class="sidebar-item" onclick="filterSector('Oil & Gas')">
+        <span class="icon">🛢</span> Oil & Gas
+      </div>
+      <div class="sidebar-item" onclick="filterSector('Industrial')">
+        <span class="icon">🏭</span> Industrial
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <div class="sidebar-item" onclick="showPage('ai-advisor', null)">
+        <span class="icon">🤖</span> AI Advisor
+      </div>
+      <div class="sidebar-item" onclick="showPage('screener', null)">
+        <span class="icon">🔍</span> Screener
+      </div>
+      <div class="sidebar-item" onclick="showPage('portfolio', null)">
+        <span class="icon">💼</span> Portfolio
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="market-header">
+        <div>
+          <div class="market-title">NGX All-Share Index</div>
+          <div class="market-index" id="asi-value">97,431.25</div>
+          <div class="market-change positive" id="asi-change">▲ +1,243.80 (+1.29%) Today</div>
+        </div>
+        <div class="market-meta">
+          <div>Volume: <span style="color:var(--text-2)">₦8.4B</span></div>
+          <div>Trades: <span style="color:var(--text-2)">14,203</span></div>
+          <div>Adv/Dec: <span style="color:var(--green)">89</span> / <span style="color:var(--red)">47</span></div>
+          <div style="margin-top:4px;font-size:10px">Last updated: 13:24 WAT</div>
+        </div>
+      </div>
+
+      <!-- CHART -->
+      <div class="index-chart">
+        <div class="chart-header">
+          <span class="chart-title">NGX ASI Performance</span>
+          <div class="chart-timeframes">
+            <button class="tf-btn" onclick="setTF(this,'1W')">1W</button>
+            <button class="tf-btn active" onclick="setTF(this,'1M')">1M</button>
+            <button class="tf-btn" onclick="setTF(this,'3M')">3M</button>
+            <button class="tf-btn" onclick="setTF(this,'1Y')">1Y</button>
+            <button class="tf-btn" onclick="setTF(this,'5Y')">5Y</button>
+          </div>
+        </div>
+        <svg class="mini-chart" id="main-chart" viewBox="0 0 900 160" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00e87a" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#00e87a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Market Cap</div>
+          <div class="stat-value">₦58.3T</div>
+          <div class="stat-sub positive">▲ +2.1% YTD</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Volume Traded</div>
+          <div class="stat-value">₦8.4B</div>
+          <div class="stat-sub neutral">↔ Avg volume</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">52-Week High</div>
+          <div class="stat-value">103,240</div>
+          <div class="stat-sub negative">▼ -5.6% from high</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">NGX 30 Index</div>
+          <div class="stat-value">3,842.10</div>
+          <div class="stat-sub positive">▲ +0.87% today</div>
+        </div>
+      </div>
+
+      <!-- TOP MOVERS -->
+      <div class="two-col">
+        <div>
+          <div class="section-header">
+            <span class="section-title">Top Stocks</span>
+            <span class="section-action" onclick="showPage('screener',null)">View all →</span>
+          </div>
+          <div class="stocks-table">
+            <div class="table-header">
+              <span>Stock</span>
+              <span>Sector</span>
+              <span>Price</span>
+              <span>Change</span>
+              <span>Mkt Cap</span>
+              <span>Chart</span>
+              <span>AI Signal</span>
+            </div>
+            <div id="stocks-body"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-header">
+            <span class="section-title">Sector Heatmap</span>
+          </div>
+          <div class="heatmap-card">
+            <div id="heatmap-grid" class="heatmap-grid"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="section-header">
+              <span class="section-title">Latest News</span>
+              <span class="section-action" onclick="showPage('news',null)">All news →</span>
+            </div>
+            <div class="news-card" id="mini-news"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREENER PAGE -->
+    <div class="page" id="page-screener">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="market-title">Stock Screener</div>
+          <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-top:4px">Filter NGX Stocks</div>
+        </div>
+      </div>
+
+      <div class="screener-filters">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Sector</label>
+            <select class="filter-select" id="f-sector">
+              <option value="">All Sectors</option>
+              <option>Banking</option>
+              <option>Consumer Goods</option>
+              <option>Telecoms</option>
+              <option>Oil & Gas</option>
+              <option>Industrial</option>
+              <option>Insurance</option>
+              <option>Healthcare</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Min Price (₦)</label>
+            <input type="number" class="filter-input" id="f-min-price" placeholder="e.g. 10">
+          </div>
+          <div class="filter-group">
+            <label>Max Price (₦)</label>
+            <input type="number" class="filter-input" id="f-max-price" placeholder="e.g. 500">
+          </div>
+          <div class="filter-group">
+            <label>Min P/E Ratio</label>
+            <input type="number" class="filter-input" id="f-min-pe" placeholder="e.g. 5">
+          </div>
+          <div class="filter-group">
+            <label>Max P/E Ratio</label>
+            <input type="number" class="filter-input" id="f-max-pe" placeholder="e.g. 30">
+          </div>
+          <div class="filter-group">
+            <label>Min Dividend Yield %</label>
+            <input type="number" class="filter-input" id="f-div" placeholder="e.g. 3">
+          </div>
+          <div class="filter-group">
+            <label>AI Signal</label>
+            <select class="filter-select" id="f-signal">
+              <option value="">Any Signal</option>
+              <option>STRONG BUY</option>
+              <option>BUY</option>
+              <option>HOLD</option>
+              <option>SELL</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Min Market Cap</label>
+            <select class="filter-select" id="f-cap">
+              <option value="">Any Size</option>
+              <option value="large">Large Cap (>₦500B)</option>
+              <option value="mid">Mid Cap (₦50B-500B)</option>
+              <option value="small">Small Cap (<₦50B)</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>52W Performance</label>
+            <select class="filter-select" id="f-perf">
+              <option value="">Any</option>
+              <option value="up">Up YTD</option>
+              <option value="down">Down YTD</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn-screen" onclick="runScreener()">Run Screener</button>
+          <button class="btn-reset" onclick="resetScreener()">Reset</button>
+          <span class="results-count" id="results-count">Showing 20 results</span>
+        </div>
+      </div>
+
+      <div class="stocks-table">
+        <div class="table-header">
+          <span>Stock</span>
+          <span>Sector</span>
+          <span>Price</span>
+          <span>Change</span>
+          <span>Mkt Cap</span>
+          <span>Chart</span>
+          <span>AI Signal</span>
+        </div>
+        <div id="screener-body"></div>
+      </div>
+    </div>
+
+    <!-- AI ADVISOR PAGE -->
+    <div class="page ai-page" id="page-ai-advisor">
+      <div class="ai-hero">
+        <div class="ai-badge">✦ AI-Powered · Powered by Claude</div>
+        <h2 class="ai-hero-title">Your Personal<br><em>Nigerian Market</em> Advisor</h2>
+        <p class="ai-hero-sub">Ask about any NGX stock, get AI-generated fundamental analysis, sentiment scoring, fair value estimates, and personalized investment insights.</p>
+        <div class="ai-input-row">
+          <input class="ai-input" id="ai-query" placeholder="e.g. Analyze Dangote Cement for me, or Should I buy GTCO?" onkeydown="if(event.key==='Enter') runAIAnalysis()">
+          <button class="btn-analyze" id="analyze-btn" onclick="runAIAnalysis()">
+            <span id="analyze-btn-text">Analyze →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- QUICK PICKS -->
+      <div class="section-header">
+        <span class="section-title">Quick Analysis</span>
+        <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-3)">Click to analyze</span>
+      </div>
+      <div class="quick-picks">
+        <div class="quick-pick" onclick="quickAnalyze('DANGCEM', 'Dangote Cement')">
+          <div class="qp-ticker">DANGCEM</div>
+          <div class="qp-name">Dangote Cement</div>
+          <div class="ai-signal signal-buy qp-signal">STRONG BUY</div>
+        </div>
+        <div class="quick-pick" onclick="quickAnalyze('GTCO', 'Guaranty Trust')">
+          <div class="qp-ticker">GTCO</div>
+          <div class="qp-name">Guaranty Trust</div>
+          <div class="ai-signal signal-buy qp-signal">BUY</div>
+        </div>
+        <div class="quick-pick" onclick="quickAnalyze('MTNN', 'MTN Nigeria')">
+          <div class="qp-ticker">MTNN</div>
+          <div class="qp-name">MTN Nigeria</div>
+          <div class="ai-signal signal-hold qp-signal">HOLD</div>
+        </div>
+        <div class="quick-pick" onclick="quickAnalyze('ZENITHBANK', 'Zenith Bank')">
+          <div class="qp-ticker">ZENITHBANK</div>
+          <div class="qp-name">Zenith Bank</div>
+          <div class="ai-signal signal-buy qp-signal">BUY</div>
+        </div>
+      </div>
+
+      <!-- AI RESULTS AREA -->
+      <div id="ai-results-area"></div>
+    </div>
+
+    <!-- PORTFOLIO PAGE -->
+    <div class="page" id="page-portfolio">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="market-title">My Portfolio</div>
+          <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-top:4px">Track Your Holdings</div>
+        </div>
+      </div>
+
+      <div class="portfolio-summary">
+        <div class="portfolio-hero">
+          <div class="portfolio-label">Total Portfolio Value</div>
+          <div class="portfolio-value" id="portfolio-value">₦0.00</div>
+          <div class="market-change positive" id="portfolio-pnl">Add holdings to get started</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Cost</div>
+          <div class="stat-value" id="portfolio-cost">₦0.00</div>
+          <div class="stat-sub">Invested capital</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unrealized P&L</div>
+          <div class="stat-value" id="portfolio-gain">₦0.00</div>
+          <div class="stat-sub" id="portfolio-gain-pct">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Holdings</div>
+          <div class="stat-value" id="portfolio-count">0</div>
+          <div class="stat-sub">Positions</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Add Holding</span>
+      </div>
+      <div class="add-holding-form">
+        <div class="form-group">
+          <label>Ticker Symbol</label>
+          <input type="text" class="form-input" id="h-ticker" placeholder="e.g. DANGCEM" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label>Quantity (Units)</label>
+          <input type="number" class="form-input" id="h-qty" placeholder="e.g. 1000">
+        </div>
+        <div class="form-group">
+          <label>Avg Buy Price (₦)</label>
+          <input type="number" class="form-input" id="h-price" placeholder="e.g. 550.00">
+        </div>
+        <button class="btn-add" onclick="addHolding()">+ Add to Portfolio</button>
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Holdings</span>
+      </div>
+      <div class="holdings-list">
+        <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px">
+          <span>Stock</span>
+          <span>Qty</span>
+          <span>Avg Cost</span>
+          <span>Current</span>
+          <span>P&L</span>
+          <span>Action</span>
+        </div>
+        <div id="holdings-body">
+          <div class="empty-state">
+            <span class="emoji">📊</span>
+            No holdings yet. Add your first position above.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWS PAGE -->
+    <div class="page" id="page-news">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="market-title">Market Intelligence</div>
+          <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-top:4px">NGX News & Analysis</div>
+        </div>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" placeholder="Search news by ticker, topic, or keyword..." id="news-search" oninput="filterNews()">
+      </div>
+      <div id="full-news-feed"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TICKER TAPE -->
+<div class="ticker-tape" id="ticker-tape" style="display:none">
+  <div class="ticker-inner" id="ticker-inner"></div>
+</div>
+
+<!-- STOCK DETAIL MODAL -->
+<div class="modal-overlay" id="stock-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div id="modal-ticker" style="font-size:20px;font-weight:800;font-family:var(--font-mono)"></div>
+        <div id="modal-name" style="font-size:12px;color:var(--text-3);margin-top:2px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:16px">
+        <div class="stock-detail-price" id="modal-price"></div>
+        <div id="modal-change" style="font-size:14px;font-family:var(--font-mono);margin-bottom:6px"></div>
+      </div>
+      <svg id="modal-chart" width="100%" height="100" viewBox="0 0 600 100" preserveAspectRatio="none" style="border-radius:8px;background:var(--bg-3);margin-bottom:16px"></svg>
+      <div class="fundamentals-grid" id="modal-fundamentals"></div>
+      <div style="margin-top:16px">
+        <div style="font-size:11px;font-family:var(--font-mono);letter-spacing:1px;color:var(--text-3);text-transform:uppercase;margin-bottom:10px">AI Signal</div>
+        <div id="modal-ai-signal"></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn-analyze" style="flex:1;justify-content:center" onclick="analyzeFromModal()">Get Full AI Analysis</button>
+        <button style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);color:var(--text-2);border-radius:10px;font-size:13px;cursor:pointer;font-family:var(--font-display)" onclick="addToWatchlist()">+ Watchlist</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgrade-modal" onclick="if(event.target===this)closeUpgradeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-size:16px;font-weight:700">Upgrade Your Plan</span>
+      <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
+    </div>
+    <div class="upgrade-modal-body">
+      <div class="upgrade-icon">🚀</div>
+      <div class="upgrade-title">Unlock Full AI Power</div>
+      <div class="upgrade-sub">Get AI-powered stock analysis, personalized investment advice, advanced screener, and real-time alerts.</div>
+      <div class="pricing-cards">
+        <div class="pricing-card">
+          <div class="pricing-plan">Pro</div>
+          <div class="pricing-price">₦3,500</div>
+          <div class="pricing-period">per month</div>
+          <div class="pricing-feature">Advanced stock screener</div>
+          <div class="pricing-feature">AI stock summaries</div>
+          <div class="pricing-feature">Sector heatmaps</div>
+          <div class="pricing-feature">Price alerts</div>
+          <div class="pricing-feature">Historical fundamentals</div>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-plan">Premium</div>
+          <div class="pricing-price">₦10,000</div>
+          <div class="pricing-period">per month</div>
+          <div class="pricing-feature">Everything in Pro</div>
+          <div class="pricing-feature">Full AI investment advisor</div>
+          <div class="pricing-feature">Portfolio optimization</div>
+          <div class="pricing-feature">Macro overlay analysis</div>
+          <div class="pricing-feature">Fair value estimates</div>
+        </div>
+      </div>
+      <button class="btn-subscribe" onclick="showToast('Redirecting to Paystack...','success');closeUpgradeModal()">Subscribe with Paystack →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✓</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+
+// Scraper API endpoint — set to 'null' to use demo data only
+// When scraper.js is running locally, set to 'http://localhost:4000'
+const SCRAPER_API = 'http://localhost:4000';
+
+// Fallback demo data (used when scraper is offline)
+const STOCKS_FALLBACK = [
+  { ticker:'DANGCEM', name:'Dangote Cement Plc', sector:'Industrial', price:571.00, change:2.14, mcap:'₦9.7T', pe:12.4, divYield:5.2, signal:'STRONG BUY', data:[530,545,538,552,548,560,555,568,562,571] },
+  { ticker:'GTCO', name:'Guaranty Trust Holding', sector:'Banking', price:46.50, change:1.53, mcap:'₦1.37T', pe:4.8, divYield:8.1, signal:'BUY', data:[38,40,41,39,42,44,43,45,46,46.5] },
+  { ticker:'ZENITHBANK', name:'Zenith Bank Plc', sector:'Banking', price:36.85, change:-0.67, mcap:'₦1.16T', pe:3.9, divYield:9.4, signal:'BUY', data:[34,35,36,35.5,37,36,37.5,37,37.2,36.85] },
+  { ticker:'MTNN', name:'MTN Nigeria Comms', sector:'Telecoms', price:198.90, change:0.45, mcap:'₦4.03T', pe:18.2, divYield:3.1, signal:'HOLD', data:[210,205,200,195,193,196,197,199,198,198.9] },
+  { ticker:'AIRTELAFRI', name:'Airtel Africa Plc', sector:'Telecoms', price:1540.00, change:1.25, mcap:'₦5.81T', pe:14.6, divYield:2.8, signal:'BUY', data:[1400,1420,1450,1470,1460,1490,1510,1525,1535,1540] },
+  { ticker:'NESTLE', name:'Nestle Nigeria Plc', sector:'Consumer Goods', price:920.00, change:-1.28, mcap:'₦731B', pe:22.1, divYield:4.5, signal:'HOLD', data:[980,965,950,940,930,935,925,928,922,920] },
+  { ticker:'FBNH', name:'FBN Holdings Plc', sector:'Banking', price:26.70, change:3.09, mcap:'₦956B', pe:3.2, divYield:6.8, signal:'BUY', data:[22,23,24,24.5,25,25.5,26,26.3,25.9,26.7] },
+  { ticker:'SEPLAT', name:'Seplat Energy Plc', sector:'Oil & Gas', price:3750.00, change:0.67, mcap:'₦2.2T', pe:8.7, divYield:3.9, signal:'STRONG BUY', data:[3200,3300,3400,3500,3600,3650,3700,3720,3740,3750] },
+  { ticker:'STERLNBANK', name:'Sterling Financial', sector:'Banking', price:4.85, change:-1.02, mcap:'₦163B', pe:5.1, divYield:5.5, signal:'HOLD', data:[5.2,5.1,5.0,4.95,4.9,4.85,4.9,4.88,4.86,4.85] },
+  { ticker:'BUACEMENT', name:'BUA Cement Plc', sector:'Industrial', price:87.50, change:0.92, mcap:'₦2.97T', pe:15.3, divYield:3.7, signal:'BUY', data:[80,82,83,84,85,86,86.5,87,87.2,87.5] },
+  { ticker:'ACCESSCORP', name:'Access Holdings Plc', sector:'Banking', price:19.85, change:2.32, mcap:'₦709B', pe:2.8, divYield:7.2, signal:'STRONG BUY', data:[17,17.5,18,18.5,19,19.2,19.4,19.6,19.7,19.85] },
+  { ticker:'INTBREW', name:'International Breweries', sector:'Consumer Goods', price:4.45, change:-2.41, mcap:'₦165B', pe:28.4, divYield:0, signal:'SELL', data:[5.2,5.0,4.8,4.7,4.6,4.55,4.5,4.48,4.47,4.45] },
+];
+
+// Live state — populated from scraper or fallback
+let STOCKS = [...STOCKS_FALLBACK];
+let liveDataActive = false;
+let lastLiveFetch = null;
+
+// Convert raw scraper stock → internal format
+function normalizeScraperStock(raw, existing) {
+  const fb = existing || {};
+  return {
+    ticker: raw.ticker,
+    name: raw.name || fb.name || raw.ticker,
+    sector: raw.sector || fb.sector || 'Other',
+    price: raw.close || raw.price || fb.price || 0,
+    change: raw.changePct || raw.change || 0,
+    mcap: fb.mcap || '—',
+    pe: fb.pe || null,
+    divYield: fb.divYield || null,
+    signal: fb.signal || 'HOLD',
+    // Preserve existing sparkline data, append new price
+    data: fb.data ? [...fb.data.slice(-9), raw.close || raw.price || fb.price] : [raw.close || raw.price],
+    // Live metadata
+    open: raw.open,
+    high: raw.high,
+    low: raw.low,
+    volume: raw.volume,
+    high52w: raw.high52w,
+    low52w: raw.low52w,
+    live: true,
+  };
+}
+
+// Fetch live prices from the scraper API
+async function fetchLivePrices() {
+  try {
+    const res = await fetch(`${SCRAPER_API}/api/prices`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+
+    if (!json.stocks || json.stocks.length === 0) throw new Error('No stocks returned');
+
+    // Merge live data with fallback (preserves AI signals, PE ratios, market caps)
+    const merged = json.stocks.map(raw => {
+      const existing = STOCKS_FALLBACK.find(s => s.ticker === raw.ticker);
+      return normalizeScraperStock(raw, existing);
+    });
+
+    // Keep fallback stocks that scraper didn't return (preserve full list)
+    STOCKS_FALLBACK.forEach(fb => {
+      if (!merged.find(s => s.ticker === fb.ticker)) merged.push(fb);
+    });
+
+    STOCKS = merged;
+    liveDataActive = true;
+    lastLiveFetch = new Date();
+    return { success: true, count: json.stocks.length, marketOpen: json.marketOpen };
+
+  } catch (err) {
+    // Scraper not running — silently fall back to demo data
+    liveDataActive = false;
+    return { success: false, error: err.message };
+  }
+}
+
+// Fetch market summary (ASI) from scraper
+async function fetchLiveMarket() {
+  try {
+    const res = await fetch(`${SCRAPER_API}/api/market`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Update the data source indicator in the UI
+function updateDataSourceBadge() {
+  const badge = document.getElementById('data-source-badge');
+  if (!badge) return;
+  if (liveDataActive) {
+    badge.innerHTML = `<span class="status-dot" style="background:var(--green)"></span> LIVE NGX DATA`;
+    badge.style.color = 'var(--green)';
+    if (lastLiveFetch) {
+      badge.title = `Last updated: ${lastLiveFetch.toLocaleTimeString('en-NG')}`;
+    }
+  } else {
+    badge.innerHTML = `<span class="status-dot" style="background:var(--gold)"></span> DEMO DATA`;
+    badge.style.color = 'var(--gold)';
+    badge.title = 'Start scraper.js for live NGX prices';
+  }
+}
+
+const SECTORS = [
+  { name:'Banking', change:+2.41, color:'#0d3d26' },
+  { name:'Consumer Goods', change:-0.87, color:'#3d1212' },
+  { name:'Telecoms', change:+0.92, color:'#1a3320' },
+  { name:'Oil & Gas', change:+1.54, color:'#2a3d1a' },
+  { name:'Industrial', change:+1.83, color:'#0f3526' },
+  { name:'Insurance', change:-0.34, color:'#2d1a1a' },
+];
+
+const NEWS = [
+  { source:'NGX Official', time:'13:05', ticker:'DANGCEM', headline:'Dangote Cement reports record Q3 revenue of ₦872B, beats analyst estimates by 12%', sentiment:'positive', score:0.91 },
+  { source:'BusinessDay', time:'12:43', ticker:'GTCO', headline:'GTBank posts ₦609B PBT in H1 2024, declares interim dividend of ₦1.50 per share', sentiment:'positive', score:0.88 },
+  { source:'Nairametrics', time:'12:20', ticker:'MTNN', headline:'MTN Nigeria faces ₦200B NCC fine for SIM registration violations, shares dip', sentiment:'negative', score:0.22 },
+  { source:'Bloomberg Africa', time:'11:55', ticker:'SEPLAT', headline:'Seplat Energy completes Mobil acquisition, adding 95,000 barrels/day capacity', sentiment:'positive', score:0.94 },
+  { source:'TheEagle', time:'11:30', ticker:'ZENITHBANK', headline:'Zenith Bank grows customer deposits to ₦17.8T, maintains tier-1 capital adequacy', sentiment:'positive', score:0.76 },
+  { source:'CBN', time:'10:48', ticker:'ALL', headline:'CBN holds MPR at 26.75%, signals inflation management priority through 2024', sentiment:'neutral', score:0.52 },
+  { source:'NBS', time:'09:30', ticker:'ALL', headline:'Nigeria Q3 GDP grows 3.46%, driven by services sector — NBS report', sentiment:'positive', score:0.68 },
+];
+
+const ASI_DATA_1M = [88200,88940,89100,90200,89800,91100,90500,92300,91800,92900,92100,93400,92800,94100,93500,94800,94200,95500,94900,96100,95400,96800,96200,97100,96500,97800,97200,97800,97431];
+
+let portfolio = JSON.parse(localStorage.getItem('ngx_portfolio') || '[]');
+let currentModalTicker = '';
+
+// ============================================================
+// INIT
+// ============================================================
+async function enterApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'flex';
+  document.getElementById('ticker-tape').style.display = 'flex';
+
+  // Try to load live prices before rendering
+  const liveResult = await fetchLivePrices();
+  if (liveResult.success) {
+    showToast(`✅ Live NGX data loaded — ${liveResult.count} stocks`, 'success');
+    // Try to update ASI with live value
+    const market = await fetchLiveMarket();
+    if (market?.asi?.value) {
+      ASI_DATA_1M.push(market.asi.value);
+      document.getElementById('asi-value').textContent = market.asi.value.toLocaleString('en-NG', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+  }
+
+  initDashboard();
+  renderTickerTape();
+  updateMarketTime();
+  updateDataSourceBadge();
+
+  // Simulate price movement for demo feel (even with live data, prices drift slightly)
+  setInterval(simulatePriceUpdates, 4000);
+  setInterval(updateMarketTime, 1000);
+
+  // Refresh live prices every 10 minutes if scraper is running
+  setInterval(async () => {
+    const result = await fetchLivePrices();
+    if (result.success) {
+      updateDataSourceBadge();
+      renderStocksTable('stocks-body', STOCKS.slice(0,8));
+      renderScreener();
+      renderTickerTape();
+    }
+  }, 10 * 60 * 1000);
+}
+
+function initDashboard() {
+  renderMainChart(ASI_DATA_1M);
+  renderStocksTable('stocks-body', STOCKS.slice(0,8));
+  renderHeatmap();
+  renderMiniNews();
+  renderScreener();
+  renderNews();
+  renderPortfolio();
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderMainChart(data) {
+  const svg = document.getElementById('main-chart');
+  const w = 900, h = 160;
+  const min = Math.min(...data), max = Math.max(...data);
+  const pts = data.map((v,i) => {
+    const x = (i/(data.length-1))*w;
+    const y = h - ((v-min)/(max-min))*(h-20) - 10;
+    return `${x},${y}`;
+  });
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#00e87a" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#00e87a" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="M${pts.join('L')}L${w},${h}L0,${h}Z" fill="url(#cg)"/>
+    <path d="M${pts.join('L')}" fill="none" stroke="#00e87a" stroke-width="2"/>
+    <circle cx="${pts[pts.length-1].split(',')[0]}" cy="${pts[pts.length-1].split(',')[1]}" r="4" fill="#00e87a" filter="drop-shadow(0 0 4px #00e87a)"/>
+  `;
+}
+
+function generateSparkline(data, positive) {
+  const w=60, h=24;
+  const min=Math.min(...data), max=Math.max(...data);
+  const pts = data.map((v,i) => {
+    const x=(i/(data.length-1))*w;
+    const y=h-((v-min)/(max-min||1))*(h-4)-2;
+    return `${x},${y}`;
+  });
+  const color = positive ? '#00e87a' : '#ff4757';
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="sparkline"><path d="M${pts.join('L')}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+}
+
+function renderModalChart(data) {
+  const svg = document.getElementById('modal-chart');
+  const w=600, h=100;
+  const min=Math.min(...data), max=Math.max(...data);
+  const pts = data.map((v,i) => {
+    const x=(i/(data.length-1))*w;
+    const y=h-((v-min)/(max-min||1))*(h-10)-5;
+    return `${x},${y}`;
+  });
+  svg.innerHTML = `
+    <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00e87a" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00e87a" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="M${pts.join('L')}L${w},${h}L0,${h}Z" fill="url(#mg)"/>
+    <path d="M${pts.join('L')}" fill="none" stroke="#00e87a" stroke-width="2"/>
+  `;
+}
+
+// ============================================================
+// STOCKS TABLE
+// ============================================================
+function renderStocksTable(containerId, stocks) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = stocks.map(s => {
+    const pos = s.change >= 0;
+    const signalClass = s.signal==='STRONG BUY'?'signal-buy':s.signal==='BUY'?'signal-buy':s.signal==='HOLD'?'signal-hold':'signal-sell';
+    return `
+      <div class="table-row" onclick="openStockModal('${s.ticker}')">
+        <div class="stock-name-col">
+          <div class="stock-ticker">${s.ticker}</div>
+          <div class="stock-fullname">${s.name}</div>
+        </div>
+        <div><span class="stock-sector-badge">${s.sector}</span></div>
+        <div class="price-col">₦${s.price.toLocaleString('en-NG',{minimumFractionDigits:2})}</div>
+        <div class="change-col ${pos?'positive':'negative'}">${pos?'▲':'▼'} ${Math.abs(s.change)}%</div>
+        <div style="font-size:12px;font-family:var(--font-mono);color:var(--text-2)">${s.mcap}</div>
+        <div class="sparkline-col">${generateSparkline(s.data, pos)}</div>
+        <div><span class="ai-signal ${signalClass}">${s.signal}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+function renderHeatmap() {
+  const grid = document.getElementById('heatmap-grid');
+  grid.innerHTML = SECTORS.map(s => {
+    const pos = s.change >= 0;
+    const intensity = Math.min(Math.abs(s.change)/3, 1);
+    const bg = pos
+      ? `rgba(0,232,122,${0.1 + intensity*0.3})`
+      : `rgba(255,71,87,${0.1 + intensity*0.3})`;
+    const color = pos ? '#00e87a' : '#ff4757';
+    return `
+      <div class="heatmap-cell" style="background:${bg};border:1px solid ${color}22" onclick="filterSector('${s.name}')">
+        <div class="heatmap-sector" style="color:${color}">${s.name}</div>
+        <div class="heatmap-change" style="color:${color}">${pos?'+':''}${s.change}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// NEWS
+// ============================================================
+function renderMiniNews() {
+  const container = document.getElementById('mini-news');
+  container.innerHTML = NEWS.slice(0,4).map(n => renderNewsItem(n)).join('');
+}
+
+function renderNews() {
+  const container = document.getElementById('full-news-feed');
+  container.innerHTML = `<div class="news-card">${NEWS.map(n => renderNewsItem(n)).join('')}</div>`;
+}
+
+function renderNewsItem(n) {
+  const sColor = n.sentiment==='positive'?'var(--green)':n.sentiment==='negative'?'var(--red)':'var(--gold)';
+  const sIcon = n.sentiment==='positive'?'↑':n.sentiment==='negative'?'↓':'→';
+  return `
+    <div class="news-item">
+      <div class="news-meta">
+        <span class="news-source">${n.source}</span>
+        <span class="news-time">${n.time} WAT</span>
+        ${n.ticker!=='ALL'?`<span class="news-ticker-tag">${n.ticker}</span>`:''}
+      </div>
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-sentiment" style="color:${sColor}">${sIcon} ${n.sentiment.toUpperCase()} · Score ${(n.score*100).toFixed(0)}%</div>
+    </div>
+  `;
+}
+
+function filterNews() {
+  const q = document.getElementById('news-search').value.toLowerCase();
+  const filtered = NEWS.filter(n => 
+    n.headline.toLowerCase().includes(q) || 
+    n.ticker.toLowerCase().includes(q) ||
+    n.source.toLowerCase().includes(q)
+  );
+  const container = document.getElementById('full-news-feed');
+  container.innerHTML = `<div class="news-card">${filtered.map(n=>renderNewsItem(n)).join('')||'<div class="empty-state"><span class="emoji">🔍</span>No results found.</div>'}</div>`;
+}
+
+// ============================================================
+// SCREENER
+// ============================================================
+function renderScreener(stocks = STOCKS) {
+  renderStocksTable('screener-body', stocks);
+  document.getElementById('results-count').textContent = `Showing ${stocks.length} results`;
+}
+
+function runScreener() {
+  const sector = document.getElementById('f-sector').value;
+  const minP = parseFloat(document.getElementById('f-min-price').value)||0;
+  const maxP = parseFloat(document.getElementById('f-max-price').value)||Infinity;
+  const minPE = parseFloat(document.getElementById('f-min-pe').value)||0;
+  const maxPE = parseFloat(document.getElementById('f-max-pe').value)||Infinity;
+  const minDiv = parseFloat(document.getElementById('f-div').value)||0;
+  const signal = document.getElementById('f-signal').value;
+
+  const filtered = STOCKS.filter(s =>
+    (!sector || s.sector === sector) &&
+    s.price >= minP && s.price <= maxP &&
+    s.pe >= minPE && s.pe <= maxPE &&
+    s.divYield >= minDiv &&
+    (!signal || s.signal === signal)
+  );
+
+  renderScreener(filtered);
+  showToast(`Found ${filtered.length} matching stocks`, 'success');
+}
+
+function resetScreener() {
+  ['f-sector','f-signal','f-cap','f-perf'].forEach(id => document.getElementById(id).value='');
+  ['f-min-price','f-max-price','f-min-pe','f-max-pe','f-div'].forEach(id => document.getElementById(id).value='');
+  renderScreener();
+}
+
+// ============================================================
+// STOCK MODAL
+// ============================================================
+function openStockModal(ticker) {
+  const stock = STOCKS.find(s => s.ticker === ticker);
+  if (!stock) return;
+  currentModalTicker = ticker;
+
+  document.getElementById('modal-ticker').textContent = stock.ticker;
+  document.getElementById('modal-name').textContent = stock.name;
+  document.getElementById('modal-price').textContent = `₦${stock.price.toLocaleString('en-NG',{minimumFractionDigits:2})}`;
+  
+  const pos = stock.change >= 0;
+  const changeEl = document.getElementById('modal-change');
+  changeEl.textContent = `${pos?'▲':'▼'} ${Math.abs(stock.change)}% today`;
+  changeEl.className = pos ? 'positive' : 'negative';
+
+  renderModalChart(stock.data);
+
+  document.getElementById('modal-fundamentals').innerHTML = [
+    { label:'P/E Ratio', value:stock.pe },
+    { label:'Div Yield', value:`${stock.divYield}%` },
+    { label:'Market Cap', value:stock.mcap },
+    { label:'Sector', value:stock.sector },
+    { label:'52W High', value:`₦${(stock.price*1.12).toFixed(2)}` },
+    { label:'52W Low', value:`₦${(stock.price*0.78).toFixed(2)}` },
+  ].map(m => `
+    <div class="fund-metric">
+      <div class="fund-label">${m.label}</div>
+      <div class="fund-value">${m.value}</div>
+    </div>
+  `).join('');
+
+  const signalClass = stock.signal==='STRONG BUY'?'signal-buy':stock.signal==='BUY'?'signal-buy':stock.signal==='HOLD'?'signal-hold':'signal-sell';
+  document.getElementById('modal-ai-signal').innerHTML = `<span class="ai-signal ${signalClass} ai-signal-large">${stock.signal}</span>`;
+
+  document.getElementById('stock-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('stock-modal').classList.remove('open');
+}
+
+function analyzeFromModal() {
+  closeModal();
+  showPage('ai-advisor', null);
+  document.getElementById('ai-query').value = `Analyze ${currentModalTicker} for me`;
+  setTimeout(() => runAIAnalysis(), 300);
+}
+
+function addToWatchlist() {
+  showToast(`${currentModalTicker} added to watchlist ⭐`, 'success');
+}
+
+// ============================================================
+// AI ADVISOR
+// ============================================================
+async function runAIAnalysis() {
+  const query = document.getElementById('ai-query').value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById('analyze-btn');
+  const btnText = document.getElementById('analyze-btn-text');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="loading-spinner"></span>';
+
+  // Extract ticker from query
+  const ticker = extractTicker(query);
+  const stockData = ticker ? STOCKS.find(s => s.ticker === ticker) : null;
+
+  // Build context for Claude
+  const context = buildAIContext(query, ticker, stockData);
+
+  const resultsArea = document.getElementById('ai-results-area');
+  
+  // Create result card
+  const resultId = 'result-' + Date.now();
+  resultsArea.insertAdjacentHTML('afterbegin', `
+    <div class="ai-result" id="${resultId}">
+      <div class="ai-result-header">
+        <div>
+          <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-3);letter-spacing:1px;margin-bottom:4px">AI ANALYSIS · ${new Date().toLocaleTimeString('en-NG')}</div>
+          <div class="ai-result-ticker">${ticker || 'NGX MARKET'}</div>
+        </div>
+        <div class="loading-spinner"></div>
+      </div>
+      <div class="ai-streaming-text" id="stream-${resultId}"><span class="cursor-blink"></span></div>
+    </div>
+  `);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are an expert Nigerian stock market analyst specializing in the Nigerian Exchange Group (NGX). You have deep knowledge of Nigerian macroeconomics, CBN monetary policy, Nigerian corporate finance, and sector dynamics.
+
+When analyzing stocks, always:
+- Reference specific Nigerian economic factors (naira, inflation, CBN rates, oil prices)
+- Give concrete price targets and valuation ranges in Naira
+- Assess dividend prospects for Nigerian investors
+- Mention key risks specific to Nigerian market context
+- Be direct and actionable
+- Keep response concise and well-structured with clear sections
+- End with a brief disclaimer that this is educational, not financial advice
+
+Format with clear sections using → for bullet points. Be specific with numbers.`,
+        messages: [{ role: 'user', content: context }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || 'Analysis unavailable. Please try again.';
+    
+    // Stream the text
+    const streamEl = document.getElementById(`stream-${resultId}`);
+    await streamText(streamEl, text);
+
+    // Update header with signal if detected
+    const signal = detectSignal(text);
+    const headerEl = document.getElementById(resultId).querySelector('.ai-result-header');
+    const signalClass = signal==='STRONG BUY'?'signal-buy':signal==='BUY'?'signal-buy':signal==='HOLD'?'signal-hold':'signal-sell';
+    headerEl.innerHTML = `
+      <div>
+        <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-3);letter-spacing:1px;margin-bottom:4px">AI ANALYSIS · ${new Date().toLocaleTimeString('en-NG')}</div>
+        <div class="ai-result-ticker">${ticker || 'NGX MARKET'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        ${signal ? `<span class="ai-signal ${signalClass} ai-signal-large">${signal}</span>` : ''}
+      </div>
+    `;
+
+  } catch (err) {
+    document.getElementById(`stream-${resultId}`).innerHTML = `
+      <div style="color:var(--red);font-size:13px;font-family:var(--font-mono)">
+        ⚠ Analysis failed. Please check your connection and try again.<br>
+        <span style="color:var(--text-3);font-size:11px;margin-top:4px;display:block">Error: ${err.message}</span>
+      </div>
+    `;
+  }
+
+  btn.disabled = false;
+  btnText.textContent = 'Analyze →';
+}
+
+async function streamText(el, text) {
+  el.innerHTML = '';
+  const words = text.split(' ');
+  let current = '';
+  
+  for (let i = 0; i < words.length; i++) {
+    current += (i > 0 ? ' ' : '') + words[i];
+    el.innerHTML = formatAIText(current) + '<span class="cursor-blink"></span>';
+    await new Promise(r => setTimeout(r, 18));
+  }
+  
+  el.innerHTML = formatAIText(current);
+}
+
+function formatAIText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+    .replace(/→ /g, '<span style="color:var(--green)">→</span> ')
+    .replace(/\n\n/g, '</p><p style="margin-top:12px">')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>');
+}
+
+function extractTicker(query) {
+  const q = query.toUpperCase();
+  const found = STOCKS.find(s => q.includes(s.ticker) || q.includes(s.name.toUpperCase().split(' ')[0]));
+  return found ? found.ticker : null;
+}
+
+function buildAIContext(query, ticker, stock) {
+  if (stock) {
+    return `User query: "${query}"
+
+Current market data for ${stock.ticker} (${stock.name}):
+- Current price: ₦${stock.price}
+- Today's change: ${stock.change}%
+- Market cap: ${stock.mcap}
+- Sector: ${stock.sector}
+- P/E Ratio: ${stock.pe}x
+- Dividend yield: ${stock.divYield}%
+- Current AI signal: ${stock.signal}
+- Price trend (10 days): ${stock.data.join(', ')}
+
+Current NGX ASI: 97,431.25 (+1.29% today)
+CBN MPR: 26.75%
+Nigeria inflation: 32.15% (Oct 2024)
+USD/NGN: ₦1,590
+
+Provide a thorough investment analysis including: overall assessment, bull case, bear case, fair value estimate, key risks, and recommendation. Be specific to Nigerian market context.`;
+  }
+  return `User query: "${query}"
+
+NGX Market Context:
+- ASI: 97,431.25 (+1.29% today)
+- Market Cap: ₦58.3T
+- CBN MPR: 26.75%
+- Nigeria inflation: 32.15%
+- USD/NGN: ₦1,590
+
+Please answer the user's question with specific, actionable Nigerian stock market insights.`;
+}
+
+function detectSignal(text) {
+  const t = text.toUpperCase();
+  if (t.includes('STRONG BUY') || t.includes('STRONG-BUY')) return 'STRONG BUY';
+  if (t.includes('STRONG SELL') || t.includes('STRONG-SELL')) return 'STRONG SELL';
+  if (t.includes('BUY') && !t.includes('NOT BUY')) return 'BUY';
+  if (t.includes('SELL')) return 'SELL';
+  if (t.includes('HOLD') || t.includes('NEUTRAL')) return 'HOLD';
+  return null;
+}
+
+function quickAnalyze(ticker, name) {
+  document.getElementById('ai-query').value = `Give me a comprehensive analysis of ${name} (${ticker}) including whether I should buy, hold, or sell`;
+  runAIAnalysis();
+  // Scroll to results
+  document.getElementById('ai-results-area').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================================
+// PORTFOLIO
+// ============================================================
+function addHolding() {
+  const ticker = document.getElementById('h-ticker').value.toUpperCase().trim();
+  const qty = parseFloat(document.getElementById('h-qty').value);
+  const price = parseFloat(document.getElementById('h-price').value);
+  
+  if (!ticker || !qty || !price) { showToast('Please fill all fields', 'error'); return; }
+  
+  const stock = STOCKS.find(s => s.ticker === ticker);
+  
+  portfolio.push({ ticker, qty, avgCost: price, currentPrice: stock?.price || price, name: stock?.name || ticker, signal: stock?.signal || 'N/A' });
+  
+  document.getElementById('h-ticker').value = '';
+  document.getElementById('h-qty').value = '';
+  document.getElementById('h-price').value = '';
+  
+  savePortfolio();
+  renderPortfolio();
+  showToast(`${ticker} added to portfolio`, 'success');
+}
+
+function removeHolding(index) {
+  portfolio.splice(index, 1);
+  savePortfolio();
+  renderPortfolio();
+}
+
+function savePortfolio() {
+  localStorage.setItem('ngx_portfolio', JSON.stringify(portfolio));
+}
+
+function renderPortfolio() {
+  const body = document.getElementById('holdings-body');
+  
+  if (portfolio.length === 0) {
+    body.innerHTML = `<div class="empty-state"><span class="emoji">📊</span>No holdings yet. Add your first position above.</div>`;
+    document.getElementById('portfolio-value').textContent = '₦0.00';
+    document.getElementById('portfolio-cost').textContent = '₦0.00';
+    document.getElementById('portfolio-gain').textContent = '₦0.00';
+    document.getElementById('portfolio-count').textContent = '0';
+    return;
+  }
+  
+  let totalValue = 0, totalCost = 0;
+  
+  body.innerHTML = portfolio.map((h, i) => {
+    const value = h.qty * h.currentPrice;
+    const cost = h.qty * h.avgCost;
+    const pnl = value - cost;
+    const pnlPct = ((pnl/cost)*100).toFixed(2);
+    totalValue += value;
+    totalCost += cost;
+    const pos = pnl >= 0;
+    const signalClass = h.signal==='STRONG BUY'||h.signal==='BUY'?'signal-buy':h.signal==='HOLD'?'signal-hold':'signal-sell';
+    return `
+      <div class="holding-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 100px">
+        <div>
+          <div class="stock-ticker">${h.ticker}</div>
+          <div class="stock-fullname">${h.name}</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:13px">${h.qty.toLocaleString()}</div>
+        <div style="font-family:var(--font-mono);font-size:13px">₦${h.avgCost.toFixed(2)}</div>
+        <div style="font-family:var(--font-mono);font-size:13px">₦${h.currentPrice.toFixed(2)}</div>
+        <div style="font-family:var(--font-mono);font-size:13px" class="${pos?'positive':'negative'}">
+          ${pos?'+':''}₦${Math.abs(pnl).toLocaleString('en-NG',{minimumFractionDigits:0})}<br>
+          <span style="font-size:10px">${pos?'+':''}${pnlPct}%</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="ai-signal ${signalClass}" style="font-size:9px">${h.signal}</span>
+          <button onclick="removeHolding(${i})" style="background:var(--red-glow);border:1px solid rgba(255,71,87,0.3);color:var(--red);padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--font-mono)">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  const totalPnl = totalValue - totalCost;
+  const totalPnlPct = ((totalPnl/totalCost)*100).toFixed(2);
+  document.getElementById('portfolio-value').textContent = `₦${totalValue.toLocaleString('en-NG',{minimumFractionDigits:2})}`;
+  document.getElementById('portfolio-cost').textContent = `₦${totalCost.toLocaleString('en-NG',{minimumFractionDigits:2})}`;
+  document.getElementById('portfolio-gain').textContent = `${totalPnl>=0?'+':''}₦${totalPnl.toLocaleString('en-NG',{minimumFractionDigits:2})}`;
+  document.getElementById('portfolio-gain').className = `stat-value ${totalPnl>=0?'positive':'negative'}`;
+  document.getElementById('portfolio-gain-pct').textContent = `${totalPnl>=0?'+':''}${totalPnlPct}% return`;
+  document.getElementById('portfolio-count').textContent = portfolio.length;
+}
+
+// ============================================================
+// TICKER TAPE
+// ============================================================
+function renderTickerTape() {
+  const items = [...STOCKS, ...STOCKS]; // duplicate for seamless loop
+  const tape = document.getElementById('ticker-inner');
+  tape.innerHTML = items.map(s => {
+    const pos = s.change >= 0;
+    const color = pos ? 'var(--green)' : 'var(--red)';
+    return `
+      <div class="ticker-item">
+        <span class="ticker-name">${s.ticker}</span>
+        <span class="ticker-price">₦${s.price.toLocaleString('en-NG',{minimumFractionDigits:2})}</span>
+        <span style="color:${color};font-weight:600">${pos?'▲':'▼'}${Math.abs(s.change)}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(pageId, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${pageId}`).classList.add('active');
+  
+  if (tabEl) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+}
+
+function setTF(btn, tf) {
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // Simulate different timeframe data
+  const data = tf==='1W'?ASI_DATA_1M.slice(-7):tf==='3M'?ASI_DATA_1M:tf==='1Y'?[...Array(52)].map((_,i)=>75000+i*400+Math.random()*2000):ASI_DATA_1M;
+  renderMainChart(data);
+}
+
+function filterSector(sector) {
+  showPage('screener', document.querySelector('.nav-tab:nth-child(2)'));
+  document.getElementById('f-sector').value = sector;
+  runScreener();
+}
+
+// ============================================================
+// UPGRADE MODAL
+// ============================================================
+function showUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.add('open');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('open');
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function showToast(msg, type='success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = type==='success'?'✓':'⚠';
+  toast.className = `toast ${type} show`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function updateMarketTime() {
+  const now = new Date();
+  const hour = now.getHours();
+  const isOpen = hour >= 10 && hour < 15;
+  const timeStr = now.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('market-time').textContent = `${isOpen?'MARKET OPEN':'MARKET CLOSED'} · ${timeStr} WAT`;
+  document.querySelector('.status-dot').style.background = isOpen ? 'var(--green)' : 'var(--gold)';
+}
+
+function simulatePriceUpdates() {
+  STOCKS.forEach(s => {
+    const delta = (Math.random()-0.48)*0.3;
+    s.price = Math.max(0.1, s.price*(1+delta/100));
+    s.data.push(s.price);
+    if(s.data.length > 15) s.data.shift();
+  });
+  
+  // Update ASI
+  const current = parseFloat(document.getElementById('asi-value').textContent.replace(/,/g,''));
+  const newVal = current*(1+(Math.random()-0.49)*0.002);
+  document.getElementById('asi-value').textContent = newVal.toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+  
+  // Re-render tables if visible
+  const dashPage = document.getElementById('page-dashboard');
+  if(dashPage.classList.contains('active')) {
+    renderStocksTable('stocks-body', STOCKS.slice(0,8));
+  }
+  const screenPage = document.getElementById('page-screener');
+  if(screenPage.classList.contains('active')) {
+    renderScreener();
+  }
+  renderTickerTape();
+  
+  // Update portfolio values
+  portfolio.forEach(h => {
+    const s = STOCKS.find(s => s.ticker === h.ticker);
+    if (s) h.currentPrice = s.price;
+  });
+  if (document.getElementById('page-portfolio').classList.contains('active')) {
+    renderPortfolio();
+  }
+}
+</script>
+</body>
+</html>

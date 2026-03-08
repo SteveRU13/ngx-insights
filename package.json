@@ -1,0 +1,15 @@
+{
+  "name": "ngx-insights-scraper",
+  "version": "2.0.0",
+  "description": "NGX live price scraper — headless browser edition",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.0.1",
+    "node-cron": "^3.0.3",
+    "puppeteer": "^24.15.0"
+  }
+}
