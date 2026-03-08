@@ -2097,8 +2097,8 @@
 // ============================================================
 
 // Scraper API endpoint — set to 'null' to use demo data only
-// When scraper.js is running locally, set to 'http://localhost:4000'
-const SCRAPER_API = 'http://localhost:4000';
+// When scraper.js is running locally, set to 'https://ngx-insights-production.up.railway.app'
+const SCRAPER_API = 'https://ngx-insights-production.up.railway.app';
 
 // Fallback demo data (used when scraper is offline)
 const STOCKS_FALLBACK = [
@@ -2564,7 +2564,7 @@ async function runAIAnalysis() {
   `);
 
   try {
-    const response = await fetch('http://localhost:4000/api/ai', {
+    const response = await fetch('https://ngx-insights-production.up.railway.app/api/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
