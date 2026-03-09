@@ -1473,7 +1473,7 @@
   .ticker-inner {
     display: flex;
     gap: 40px;
-    animation: ticker 1800s linear infinite;
+    animation: ticker 200s linear infinite;
     white-space: nowrap;
   }
 
@@ -1631,21 +1631,7 @@
   <div class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Watchlist</div>
-      <div class="sidebar-item active" onclick="openStockModal('DANGCEM')">
-        <span class="icon">⭐</span> DANGCEM
-      </div>
-      <div class="sidebar-item" onclick="openStockModal('GTCO')">
-        <span class="icon">⭐</span> GTCO
-      </div>
-      <div class="sidebar-item" onclick="openStockModal('ZENITHBANK')">
-        <span class="icon">⭐</span> ZENITHBANK
-      </div>
-      <div class="sidebar-item" onclick="openStockModal('MTNN')">
-        <span class="icon">⭐</span> MTNN
-      </div>
-      <div class="sidebar-item" onclick="openStockModal('AIRTELAFRI')">
-        <span class="icon">⭐</span> AIRTELAFRI
-      </div>
+      <div id="watchlist-items"></div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Sectors</div>
@@ -2097,7 +2083,7 @@
 // ============================================================
 
 // Scraper API endpoint — set to 'null' to use demo data only
-// When scraper.js is running locally, set to 'https://ngx-insights-production.up.railway.app'
+// When scraper.js is running locally, set to 'http://localhost:4000'
 const SCRAPER_API = 'https://ngx-insights-production.up.railway.app';
 
 // Fallback demo data (used when scraper is offline)
@@ -2239,7 +2225,7 @@ const NEWS = [
 const ASI_DATA_1M = [88200,88940,89100,90200,89800,91100,90500,92300,91800,92900,92100,93400,92800,94100,93500,94800,94200,95500,94900,96100,95400,96800,96200,97100,96500,97800,97200,97800,97431];
 
 // ── API KEY ── Replace with your key from console.anthropic.com ──
-const ANTHROPIC_API_KEY = '';
+const ANTHROPIC_API_KEY = 'server-side';
 
 let portfolio = JSON.parse(localStorage.getItem('ngx_portfolio') || '[]');
 let currentModalTicker = '';
@@ -2266,6 +2252,7 @@ async function enterApp() {
   }
 
   initDashboard();
+  renderWatchlist();
   renderTickerTape();
   updateMarketTime();
   updateDataSourceBadge();
@@ -2523,8 +2510,56 @@ function analyzeFromModal() {
   setTimeout(() => runAIAnalysis(), 300);
 }
 
+// ── Watchlist (localStorage-backed) ──────────────────────────────────────────
+const DEFAULT_WATCHLIST = ['DANGCEM','GTCO','ZENITHBANK','MTNN','AIRTELAFRI'];
+
+function loadWatchlist() {
+  const saved = localStorage.getItem('ngx_watchlist');
+  return saved ? JSON.parse(saved) : [...DEFAULT_WATCHLIST];
+}
+
+function saveWatchlist(list) {
+  localStorage.setItem('ngx_watchlist', JSON.stringify(list));
+}
+
+function renderWatchlist() {
+  const list = loadWatchlist();
+  const container = document.getElementById('watchlist-items');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = `<div style="padding:8px 12px;color:var(--text-3);font-size:12px;">No stocks yet. Open any stock and click + Watchlist.</div>`;
+    return;
+  }
+  container.innerHTML = list.map(ticker => `
+    <div class="sidebar-item" style="display:flex;align-items:center;justify-content:space-between;padding-right:8px;">
+      <span onclick="openStockModal('${ticker}')" style="flex:1;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span class="icon">⭐</span> ${ticker}
+      </span>
+      <span onclick="removeFromWatchlist('${ticker}')" title="Remove"
+        style="color:var(--text-3);font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:4px;"
+        onmouseover="this.style.color='var(--red,#ef4444)'" onmouseout="this.style.color='var(--text-3)'">×</span>
+    </div>`).join('');
+}
+
 function addToWatchlist() {
-  showToast(`${currentModalTicker} added to watchlist ⭐`, 'success');
+  const ticker = currentModalTicker;
+  if (!ticker) return;
+  const list = loadWatchlist();
+  if (list.includes(ticker)) {
+    showToast(`${ticker} is already in your watchlist`, 'info');
+    return;
+  }
+  list.push(ticker);
+  saveWatchlist(list);
+  renderWatchlist();
+  showToast(`${ticker} added to watchlist ⭐`, 'success');
+}
+
+function removeFromWatchlist(ticker) {
+  const list = loadWatchlist().filter(t => t !== ticker);
+  saveWatchlist(list);
+  renderWatchlist();
+  showToast(`${ticker} removed from watchlist`, 'info');
 }
 
 // ============================================================
@@ -2564,7 +2599,7 @@ async function runAIAnalysis() {
   `);
 
   try {
-    const response = await fetch('https://ngx-insights-production.up.railway.app/api/ai', {
+    const response = await fetch('http://localhost:4000/api/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
