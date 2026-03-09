@@ -2599,7 +2599,7 @@ async function runAIAnalysis() {
   `);
 
   try {
-    const response = await fetch('http://localhost:4000/api/ai', {
+    const response = await fetch(`${SCRAPER_API}/api/ai`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
